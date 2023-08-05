@@ -27,7 +27,10 @@ from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_sc
 from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import RandomForestClassifier
 
-# import dash_bootstrap_components as dbc
+import json
+from sklearn.datasets import make_classification
+
+import dash_bootstrap_components as dbc
 
 # from flask_caching import Cache
 
@@ -66,6 +69,11 @@ app.layout = html.Div([
     dcc.ConfirmDialog(
         id='confirm-variables',
         message='Atenção, selecione ao menos uma variável!',
+    ),
+    
+    dcc.ConfirmDialog(
+        id='confirm-hiper',
+        message='Atenção, algum parâmetro inválido para o modelo selecionado!',
     ),
     
     
@@ -172,13 +180,22 @@ app.layout = html.Div([
     dcc.Dropdown(
             options = [
                 {'label': 'Logistic Regression', 'value': 'lr'},
-                {'label': 'Descision Tree', 'value': 'dt'},
+                {'label': 'Decision Tree', 'value': 'dt'},
                 {'label': 'Random Forest', 'value': 'rf'},
                 {'label': 'Rede Neural', 'value': 'mlp'}
                 ],
             value='lr',
             id="input-model"
-        )
+        ),
+    
+    html.Br(),
+    html.Label("Hiperparâmetros:"),
+    html.Br(),
+    # html.Button('Atualizar', id='btn-hiper', n_clicks=0,
+    #             style = {'background-color': '#6671FA'})
+    dbc.Button("Clique para atualizar", id='btn-hiper', color="primary", className="me-1"),
+    
+    
     
     ]
         , style={'display': 'inline-block', 'vertical-align': 'top', "margin-left": "100px"}
@@ -220,7 +237,117 @@ def display_confirm_var(list_variables):
     if len(list_variables) == 0:
         return True
     return False
-        
+
+@app.callback(
+    Output('confirm-hiper', 'displayed'),
+    Input('input-model', 'value'),
+    Input('btn-hiper', 'n_clicks')
+    )
+              
+def display_confirm_hiper(model_choiced, btn_h):
+    f = open('parameters.json')
+    data = json.load(f)
+    X, y = make_classification(n_samples=5, n_features=4,
+                        n_informative=2, n_redundant=0,
+                        random_state=0, shuffle=False)
+    
+    if model_choiced == 'lr':
+        try:
+            model = LogisticRegression(
+                C = data['models']['logistic_regression'][0]['C']
+                ,class_weight = data['models']['logistic_regression'][0]['class_weight']
+                ,dual = data['models']['logistic_regression'][0]['dual']
+                ,fit_intercept = data['models']['logistic_regression'][0]['fit_intercept']
+                ,intercept_scaling = data['models']['logistic_regression'][0]['intercept_scaling']
+                ,l1_ratio = data['models']['logistic_regression'][0]['l1_ratio']
+                ,max_iter = data['models']['logistic_regression'][0]['max_iter']
+                ,multi_class = data['models']['logistic_regression'][0]['multi_class']
+                ,n_jobs = data['models']['logistic_regression'][0]['n_jobs']
+                ,penalty = data['models']['logistic_regression'][0]['penalty']
+                ,random_state = data['models']['logistic_regression'][0]['random_state']
+                ,solver = data['models']['logistic_regression'][0]['solver']
+                ,tol = data['models']['logistic_regression'][0]['tol']
+                ,verbose = data['models']['logistic_regression'][0]['verbose']
+                ,warm_start = data['models']['logistic_regression'][0]['warm_start']
+            ).fit(X, y)
+            return False
+        except:
+            return True
+            
+    elif model_choiced == 'dt':
+        try:
+            model = DecisionTreeClassifier(
+                ccp_alpha = data['models']['decision_tree'][0]['ccp_alpha']
+                ,class_weight = data['models']['decision_tree'][0]['class_weight']
+                ,criterion = data['models']['decision_tree'][0]['criterion']
+                ,max_depth = data['models']['decision_tree'][0]['max_depth']
+                ,max_features = data['models']['decision_tree'][0]['max_features']
+                ,max_leaf_nodes = data['models']['decision_tree'][0]['max_leaf_nodes']
+                ,min_impurity_decrease = data['models']['decision_tree'][0]['min_impurity_decrease']
+                ,min_samples_leaf = data['models']['decision_tree'][0]['min_samples_leaf']
+                ,min_samples_split = data['models']['decision_tree'][0]['min_samples_split']
+                ,min_weight_fraction_leaf = data['models']['decision_tree'][0]['min_weight_fraction_leaf']
+                ,random_state = data['models']['decision_tree'][0]['random_state']
+                ,splitter = data['models']['decision_tree'][0]['splitter']
+            ).fit(X, y)
+            return False
+        except:
+            return True
+    elif model_choiced == 'rf':
+        try:
+            model = RandomForestClassifier(
+                bootstrap = data['models']['random_forest'][0]['bootstrap']
+                ,ccp_alpha = data['models']['random_forest'][0]['ccp_alpha']
+                ,class_weight = data['models']['random_forest'][0]['class_weight']
+                ,criterion = data['models']['random_forest'][0]['criterion']
+                ,max_depth = data['models']['random_forest'][0]['max_depth']
+                ,max_features = data['models']['random_forest'][0]['max_features']
+                ,max_leaf_nodes = data['models']['random_forest'][0]['max_leaf_nodes']
+                ,max_samples = data['models']['random_forest'][0]['max_samples']
+                ,min_impurity_decrease = data['models']['random_forest'][0]['min_impurity_decrease']
+                ,min_samples_leaf = data['models']['random_forest'][0]['min_samples_leaf']
+                ,min_samples_split = data['models']['random_forest'][0]['min_samples_split']
+                ,min_weight_fraction_leaf = data['models']['random_forest'][0]['min_weight_fraction_leaf']
+                ,n_estimators = data['models']['random_forest'][0]['n_estimators']
+                ,n_jobs = data['models']['random_forest'][0]['n_jobs']
+                ,oob_score = data['models']['random_forest'][0]['oob_score']
+                ,random_state = data['models']['random_forest'][0]['random_state']
+                ,verbose = data['models']['random_forest'][0]['verbose']
+                ,warm_start = data['models']['random_forest'][0]['warm_start']
+            ).fit(X, y)
+            return False
+        except:
+            return True
+    elif model_choiced == 'mlp':
+        try:
+            model = MLPClassifier(
+                alpha = data['models']['mlp_classifier'][0]['alpha']
+                ,batch_size = data['models']['mlp_classifier'][0]['batch_size']
+                ,beta_1 = data['models']['mlp_classifier'][0]['beta_1']
+                ,beta_2 = data['models']['mlp_classifier'][0]['beta_2']
+                ,early_stopping = data['models']['mlp_classifier'][0]['early_stopping']
+                ,epsilon = data['models']['mlp_classifier'][0]['epsilon']
+                ,hidden_layer_sizes = tuple(data['models']['mlp_classifier'][0]['hidden_layer_sizes'])
+                ,learning_rate = data['models']['mlp_classifier'][0]['learning_rate']
+                ,learning_rate_init = data['models']['mlp_classifier'][0]['learning_rate_init']
+                ,max_fun = data['models']['mlp_classifier'][0]['max_fun']
+                ,max_iter = data['models']['mlp_classifier'][0]['max_iter']
+                ,momentum = data['models']['mlp_classifier'][0]['momentum']
+                ,n_iter_no_change = data['models']['mlp_classifier'][0]['n_iter_no_change']
+                ,nesterovs_momentum = data['models']['mlp_classifier'][0]['nesterovs_momentum']
+                ,power_t = data['models']['mlp_classifier'][0]['power_t']
+                ,random_state = data['models']['mlp_classifier'][0]['random_state']
+                ,shuffle = data['models']['mlp_classifier'][0]['shuffle']
+                ,solver = data['models']['mlp_classifier'][0]['solver']
+                ,tol = data['models']['mlp_classifier'][0]['tol']
+                ,validation_fraction = data['models']['mlp_classifier'][0]['validation_fraction']
+                ,verbose = data['models']['mlp_classifier'][0]['verbose']
+                ,warm_start = data['models']['mlp_classifier'][0]['warm_start']
+            ).fit(X, y)
+            return False
+        except:
+            return True
+    
 #Callback que relaciona os elementos de entrada, com a saída (gráfico)
 @app.callback(
     Output('indicator-graphic', 'figure'),
@@ -229,11 +356,11 @@ def display_confirm_var(list_variables):
     Input('input-year', 'value'),
     Input('input-variables', 'value'),
     Input('input-model', 'value'),
-    Input('input-year-train', 'value')
-    # Input('input-w', 'value')
+    Input('input-year-train', 'value'),
+    Input('btn-hiper', 'n_clicks')
     )
 
-def update_fig(stock, year, list_variables, model_choiced, end_train): 
+def update_fig(stock, year, list_variables, model_choiced, end_train, btn_h): 
     
     #Baixa os dados do Ibovespa
     stock_complete = stock
@@ -312,15 +439,92 @@ def update_fig(stock, year, list_variables, model_choiced, end_train):
     x_test = df_test.drop(["Alvo"], axis = 1)
     y_test = df_test["Alvo"]
     
+    f = open('parameters.json')
+    data = json.load(f)
+
+    
     # model = DecisionTreeClassifier().fit(x_train, y_train)
+
     if model_choiced == 'lr':
-        model = LogisticRegression().fit(x_train, y_train)
+        model = LogisticRegression(
+            C = data['models']['logistic_regression'][0]['C']
+            ,class_weight = data['models']['logistic_regression'][0]['class_weight']
+            ,dual = data['models']['logistic_regression'][0]['dual']
+            ,fit_intercept = data['models']['logistic_regression'][0]['fit_intercept']
+            ,intercept_scaling = data['models']['logistic_regression'][0]['intercept_scaling']
+            ,l1_ratio = data['models']['logistic_regression'][0]['l1_ratio']
+            ,max_iter = data['models']['logistic_regression'][0]['max_iter']
+            ,multi_class = data['models']['logistic_regression'][0]['multi_class']
+            ,n_jobs = data['models']['logistic_regression'][0]['n_jobs']
+            ,penalty = data['models']['logistic_regression'][0]['penalty']
+            ,random_state = data['models']['logistic_regression'][0]['random_state']
+            ,solver = data['models']['logistic_regression'][0]['solver']
+            ,tol = data['models']['logistic_regression'][0]['tol']
+            ,verbose = data['models']['logistic_regression'][0]['verbose']
+            ,warm_start = data['models']['logistic_regression'][0]['warm_start']
+        ).fit(x_train, y_train)
     elif model_choiced == 'dt':
-        model = DecisionTreeClassifier().fit(x_train, y_train)
+        model = DecisionTreeClassifier(
+            ccp_alpha = data['models']['decision_tree'][0]['ccp_alpha']
+            ,class_weight = data['models']['decision_tree'][0]['class_weight']
+            ,criterion = data['models']['decision_tree'][0]['criterion']
+            ,max_depth = data['models']['decision_tree'][0]['max_depth']
+            ,max_features = data['models']['decision_tree'][0]['max_features']
+            ,max_leaf_nodes = data['models']['decision_tree'][0]['max_leaf_nodes']
+            ,min_impurity_decrease = data['models']['decision_tree'][0]['min_impurity_decrease']
+            ,min_samples_leaf = data['models']['decision_tree'][0]['min_samples_leaf']
+            ,min_samples_split = data['models']['decision_tree'][0]['min_samples_split']
+            ,min_weight_fraction_leaf = data['models']['decision_tree'][0]['min_weight_fraction_leaf']
+            ,random_state = data['models']['decision_tree'][0]['random_state']
+            ,splitter = data['models']['decision_tree'][0]['splitter']
+        ).fit(x_train, y_train)
     elif model_choiced == 'rf':
-        model = RandomForestClassifier().fit(x_train, y_train)
+        model = RandomForestClassifier(
+            bootstrap = data['models']['random_forest'][0]['bootstrap']
+            ,ccp_alpha = data['models']['random_forest'][0]['ccp_alpha']
+            ,class_weight = data['models']['random_forest'][0]['class_weight']
+            ,criterion = data['models']['random_forest'][0]['criterion']
+            ,max_depth = data['models']['random_forest'][0]['max_depth']
+            ,max_features = data['models']['random_forest'][0]['max_features']
+            ,max_leaf_nodes = data['models']['random_forest'][0]['max_leaf_nodes']
+            ,max_samples = data['models']['random_forest'][0]['max_samples']
+            ,min_impurity_decrease = data['models']['random_forest'][0]['min_impurity_decrease']
+            ,min_samples_leaf = data['models']['random_forest'][0]['min_samples_leaf']
+            ,min_samples_split = data['models']['random_forest'][0]['min_samples_split']
+            ,min_weight_fraction_leaf = data['models']['random_forest'][0]['min_weight_fraction_leaf']
+            ,n_estimators = data['models']['random_forest'][0]['n_estimators']
+            ,n_jobs = data['models']['random_forest'][0]['n_jobs']
+            ,oob_score = data['models']['random_forest'][0]['oob_score']
+            ,random_state = data['models']['random_forest'][0]['random_state']
+            ,verbose = data['models']['random_forest'][0]['verbose']
+            ,warm_start = data['models']['random_forest'][0]['warm_start']
+        ).fit(x_train, y_train)
     elif model_choiced == 'mlp':
-        model = MLPClassifier().fit(x_train, y_train)
+        model = MLPClassifier(
+            alpha = data['models']['mlp_classifier'][0]['alpha']
+            ,batch_size = data['models']['mlp_classifier'][0]['batch_size']
+            ,beta_1 = data['models']['mlp_classifier'][0]['beta_1']
+            ,beta_2 = data['models']['mlp_classifier'][0]['beta_2']
+            ,early_stopping = data['models']['mlp_classifier'][0]['early_stopping']
+            ,epsilon = data['models']['mlp_classifier'][0]['epsilon']
+            ,hidden_layer_sizes = tuple(data['models']['mlp_classifier'][0]['hidden_layer_sizes'])
+            ,learning_rate = data['models']['mlp_classifier'][0]['learning_rate']
+            ,learning_rate_init = data['models']['mlp_classifier'][0]['learning_rate_init']
+            ,max_fun = data['models']['mlp_classifier'][0]['max_fun']
+            ,max_iter = data['models']['mlp_classifier'][0]['max_iter']
+            ,momentum = data['models']['mlp_classifier'][0]['momentum']
+            ,n_iter_no_change = data['models']['mlp_classifier'][0]['n_iter_no_change']
+            ,nesterovs_momentum = data['models']['mlp_classifier'][0]['nesterovs_momentum']
+            ,power_t = data['models']['mlp_classifier'][0]['power_t']
+            ,random_state = data['models']['mlp_classifier'][0]['random_state']
+            ,shuffle = data['models']['mlp_classifier'][0]['shuffle']
+            ,solver = data['models']['mlp_classifier'][0]['solver']
+            ,tol = data['models']['mlp_classifier'][0]['tol']
+            ,validation_fraction = data['models']['mlp_classifier'][0]['validation_fraction']
+            ,verbose = data['models']['mlp_classifier'][0]['verbose']
+            ,warm_start = data['models']['mlp_classifier'][0]['warm_start']
+        ).fit(x_train, y_train)
+
     y_pred = model.predict(x_test)
     
     recall = np.round(recall_score(y_test, y_pred), 2)
@@ -337,12 +541,12 @@ def update_fig(stock, year, list_variables, model_choiced, end_train):
     
     
     result_mat = [
-    ["Recall", "Precision", 'f1-score', 'Acuraccy', 'Confiança-Compra'],
+    ["Recall", "Precision", 'f1-score', 'Acuraccy', 'Recomendação'],
     [recall, precision, f1, acc, status]
     ]
 
     swt_table = ff.create_table(result_mat)
-    swt_table['data'][0].colorscale=[[0, '#6671FA'],[1, '#ffffff']]
+    swt_table['data'][0].colorscale=[[0, '#2fa4e7'],[1, '#ffffff']]
     swt_table['layout']['height'] = 100
     swt_table['layout']['width'] = 930
     swt_table['layout']['margin']['t'] = 10
@@ -363,6 +567,7 @@ def update_fig(stock, year, list_variables, model_choiced, end_train):
                     )
     
     # fig.show()
+    fig.update_traces(line_color='#2fa4e7')
     
     return fig, swt_table
 
